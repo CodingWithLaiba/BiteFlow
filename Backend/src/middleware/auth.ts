@@ -1,11 +1,8 @@
 import "dotenv/config";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
 import jwt from "jsonwebtoken";
 import User from "../models/user";
-
-console.log("AUTH0_AUDIENCE =", process.env.AUTH0_AUDIENCE);
-console.log("AUTH0_ISSUER_BASE_URL =", process.env.AUTH0_ISSUER_BASE_URL);
 
 declare global {
   namespace Express {
@@ -25,31 +22,44 @@ export const jwtCheck = auth({
 export const jwtParse = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const { authorization } = req.headers;
-
-  if (!authorization || !authorization.startsWith("Bearer ")) {
-    return res.sendStatus(401);
-  }
-
-  // Remove "Bearer " from the token
-  const token = authorization.split(" ")[1];
-
   try {
-    const decoded = jwt.decode(token) as jwt.JwtPayload;
+    const authorization = req.headers.authorization;
+
+    // Must be: Bearer <token>
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Missing or invalid authorization header",
+      });
+    }
+
+    // IMPORTANT: split by SPACE
+    const token = authorization.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Missing token",
+      });
+    }
+
+    const decoded = jwt.decode(token) as jwt.JwtPayload | null;
 
     if (!decoded || !decoded.sub) {
-      return res.sendStatus(401);
+      return res.status(401).json({
+        message: "Invalid token",
+      });
     }
 
     const auth0Id = decoded.sub;
 
-    // Find one user instead of an array
+    // IMPORTANT: findOne, NOT find
     const user = await User.findOne({ auth0Id });
 
     if (!user) {
-      return res.sendStatus(401);
+      return res.status(401).json({
+        message: "User not found",
+      });
     }
 
     req.auth0Id = auth0Id;
@@ -57,7 +67,10 @@ export const jwtParse = async (
 
     next();
   } catch (error) {
-    console.error(error);
-    return res.sendStatus(401);
+    console.error("JWT Parse Error:", error);
+
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
   }
 };
