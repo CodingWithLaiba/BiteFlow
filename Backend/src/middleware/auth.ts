@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { Request, Response, NextFunction } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
-import jwt from "jsonwebtoken";
 import User from "../models/user";
 
 declare global {
@@ -22,38 +21,19 @@ export const jwtCheck = auth({
 export const jwtParse = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
-    const authorization = req.headers.authorization;
+    // jwtCheck has already validated the token
+    const auth0Id = req.auth?.payload?.sub;
 
-    // Must be: Bearer <token>
-    if (!authorization || !authorization.startsWith("Bearer ")) {
+    if (!auth0Id) {
       return res.status(401).json({
-        message: "Missing or invalid authorization header",
+        message: "Invalid token: Auth0 ID not found",
       });
     }
 
-    // IMPORTANT: split by SPACE
-    const token = authorization.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Missing token",
-      });
-    }
-
-    const decoded = jwt.decode(token) as jwt.JwtPayload | null;
-
-    if (!decoded || !decoded.sub) {
-      return res.status(401).json({
-        message: "Invalid token",
-      });
-    }
-
-    const auth0Id = decoded.sub;
-
-    // IMPORTANT: findOne, NOT find
+    // Find the MongoDB user using Auth0 ID
     const user = await User.findOne({ auth0Id });
 
     if (!user) {
@@ -62,8 +42,9 @@ export const jwtParse = async (
       });
     }
 
+    // At this point TypeScript knows user exists
     req.auth0Id = auth0Id;
-    req.userId = user._id.toString();
+    req.userId = user._id?.toString() || "";
 
     next();
   } catch (error) {
