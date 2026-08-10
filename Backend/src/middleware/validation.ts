@@ -1,25 +1,33 @@
 import { NextFunction, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 
-const handleValidationErrors = async (
+const handleValidationErrors = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array });
+    return res.status(400).json({
+      errors: errors.array(),
+    });
   }
+
   next();
 };
 
 export const validareMyUserRequest = [
-  body("name").isString().notEmpty().withMessage("Name must be string"),
-  body("addresLine1")
+  body("name").isString().notEmpty().withMessage("Name is required"),
+
+  body("addressLine1")
     .isString()
     .notEmpty()
-    .withMessage("AddresLine1ame must be string"),
-  body("city").isString().notEmpty().withMessage("city must be string"),
-  body("country").isString().notEmpty().withMessage("country must be string"),
+    .withMessage("Address Line 1 is required"),
+
+  body("city").isString().notEmpty().withMessage("City is required"),
+
+  body("country").isString().notEmpty().withMessage("Country is required"),
+
   handleValidationErrors,
 ];
