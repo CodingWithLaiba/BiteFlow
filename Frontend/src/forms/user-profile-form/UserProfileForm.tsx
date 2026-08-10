@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Form,
   FormControl,
@@ -10,15 +12,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
 import { Input } from "@/components/ui/input";
 import LoadingButton from "@/components/LoadingButton";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/types";
-import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().optional(),
-  name: z.string().min(1, "name is required"),
+  name: z.string().min(1, "Name is required"),
   addressLine1: z.string().min(1, "Address Line 1 is required"),
   city: z.string().min(1, "City is required"),
   country: z.string().min(1, "Country is required"),
@@ -43,11 +45,23 @@ const UserProfileForm = ({
 }: Props) => {
   const form = useForm<UserFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: currentUser,
+    defaultValues: {
+      email: currentUser.email ?? "",
+      name: currentUser.name ?? "",
+      addressLine1: currentUser.addressLine1 ?? "",
+      city: currentUser.city ?? "",
+      country: currentUser.country ?? "",
+    },
   });
 
   useEffect(() => {
-    form.reset(currentUser);
+    form.reset({
+      email: currentUser.email ?? "",
+      name: currentUser.name ?? "",
+      addressLine1: currentUser.addressLine1 ?? "",
+      city: currentUser.city ?? "",
+      country: currentUser.country ?? "",
+    });
   }, [currentUser, form]);
 
   return (
@@ -58,78 +72,122 @@ const UserProfileForm = ({
       >
         <div>
           <h2 className="text-2xl font-bold">{title}</h2>
+
           <FormDescription>
             View and change your profile information here
           </FormDescription>
         </div>
+
+        {/* EMAIL */}
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
+
               <FormControl>
-                <Input {...field} disabled className="bg-white" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  disabled
+                  className="bg-white"
+                />
               </FormControl>
+
+              <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* NAME */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
+
               <FormControl>
-                <Input {...field} className="bg-white" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  className="bg-white"
+                />
               </FormControl>
+
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* ADDRESS, CITY, COUNTRY */}
         <div className="flex flex-col md:flex-row gap-4">
+          {/* ADDRESS */}
           <FormField
             control={form.control}
             name="addressLine1"
             render={({ field }) => (
               <FormItem className="flex-1">
                 <FormLabel>Address Line 1</FormLabel>
+
                 <FormControl>
-                  <Input {...field} className="bg-white" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="bg-white"
+                  />
                 </FormControl>
+
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {/* CITY */}
           <FormField
             control={form.control}
             name="city"
             render={({ field }) => (
               <FormItem className="flex-1">
                 <FormLabel>City</FormLabel>
+
                 <FormControl>
-                  <Input {...field} className="bg-white" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="bg-white"
+                  />
                 </FormControl>
+
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {/* COUNTRY */}
           <FormField
             control={form.control}
             name="country"
             render={({ field }) => (
               <FormItem className="flex-1">
                 <FormLabel>Country</FormLabel>
+
                 <FormControl>
-                  <Input {...field} className="bg-white" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="bg-white"
+                  />
                 </FormControl>
+
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        {/* BUTTON */}
         {isLoading ? (
           <LoadingButton />
         ) : (
