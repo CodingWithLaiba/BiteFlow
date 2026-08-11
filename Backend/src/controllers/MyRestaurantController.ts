@@ -23,9 +23,12 @@ const createMyRestaurant = async (req: Request, res: Response) => {
     res.status(201).send(restaurant);
   } catch (error) {
     console.log(error);
+    
+  console.error("CREATE RESTAURANT ERROR:", error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 const uploadImage = async (file: Express.Multer.File) => {
   const image = file;
