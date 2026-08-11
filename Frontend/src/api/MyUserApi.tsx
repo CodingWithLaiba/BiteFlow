@@ -9,16 +9,6 @@ import type { User } from "@/types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// export type User = {
-//   _id: string;
-//   auth0Id: string;
-//   email: string;
-//   name?: string;
-//   addressLine1?: string;
-//   city?: string;
-//   country?: string;
-// };
-
 type CreateUserRequest = {
   auth0Id: string;
   email: string;
@@ -31,9 +21,8 @@ export type UpdateMyUserRequest = {
   country: string;
 };
 
-// =========================
 // CREATE USER
-// =========================
+
 
 export const useCreateMyUser = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -103,9 +92,7 @@ export const useCreateMyUser = () => {
   };
 };
 
-// =========================
 // GET USER
-// =========================
 
 export const useGetMyUser = () => {
   const {
@@ -166,9 +153,7 @@ export const useGetMyUser = () => {
   };
 };
 
-// =========================
 // UPDATE USER
-// =========================
 
 export const useUpdateMyUser = () => {
   const { getAccessTokenSilently } = useAuth0();
