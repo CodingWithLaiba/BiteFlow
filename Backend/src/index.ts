@@ -1,15 +1,22 @@
-import express, { Request, Response } from "express";
+import "dotenv/config";
+
+import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
-import myUserRoute from "./routes/myUserRoute";
-import MyRestaurantRoute from './routes/MyRestaurantRoute'
-dotenv.config();
 
-mongoose
-  .connect(process.env.MONGOBD_CONNECTION as string)
-  .then(() => console.log("Connected to MongoDB!"));
+import myUserRoute from "./routes/myUserRoute";
+import MyRestaurantRoute from "./routes/MyRestaurantRoute";
+
+// CHECK ENV VARIABLES
+
+console.log("Cloudinary config check:", {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  apiKey: process.env.CLOUDINARY_API_KEY,
+  hasSecret: !!process.env.CLOUDINARY_API_SECRET,
+});
+console.log("secret length:", process.env.CLOUDINARY_API_SECRET?.length);
+// CLOUDINARY CONFIG
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -17,14 +24,31 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+// MONGODB
 
-//api/my/user
+mongoose
+  .connect(process.env.MONGOBD_CONNECTION as string)
+  .then(() => {
+    console.log("Connected to MongoDB!");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
+  });
+
+// EXPRESS
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// ROUTES
+
 app.use("/api/my/user", myUserRoute);
 
-app.use("/api/my/restaurant", MyRestaurantRoute)
+app.use("/api/my/restaurant", MyRestaurantRoute);
+
+// SERVER
 
 app.listen(7000, () => {
   console.log("server started on localhost:7000");
