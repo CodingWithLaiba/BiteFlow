@@ -2,6 +2,20 @@ import { Request, Response } from "express";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
 import Restaurant from "../models/restaurants";
+
+const getMyRestaurant = async (req: Request, res: Response) => {
+  try {
+    const restaurant = await Restaurant.findOne({ user: req.userId });
+    if (!restaurant) {
+      return res.status(404).json({ message: "restaurant not found" });
+    }
+    res.json(restaurant);
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({ message: "Error fetching restaurant" });
+  }
+};
+
 const createMyRestaurant = async (req: Request, res: Response) => {
   try {
     const existingRestaurant = await Restaurant.findOne({ user: req.userId });
@@ -29,6 +43,38 @@ const createMyRestaurant = async (req: Request, res: Response) => {
   }
 };
 
+const updateMyRestaurant = async (req: Request, res: Response) => {
+  try {
+    const restaurant = await Restaurant.findOne({
+      user: req.userId,
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "restaurant not found" });
+    }
+
+    restaurant.restaurantName = req.body.restaurantName;
+    restaurant.city = req.body.city;
+    restaurant.country = req.body.country;
+    restaurant.deliveryPrice = req.body.deliveryPrice;
+    restaurant.estimatedDeliveryTime = req.body.estimatedDeliveryTime;
+    restaurant.cuisines = req.body.cuisines;
+    restaurant.menuItems = req.body.menuItems;
+    restaurant.lastUpdated = new Date();
+
+    if (req.file) {
+      const imageUrl = await uploadImage(req.file as Express.Multer.File);
+      restaurant.imageUrl = imageUrl;
+    }
+
+    await restaurant.save();
+    res.status(200).send(restaurant);
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 
 const uploadImage = async (file: Express.Multer.File) => {
   const image = file;
@@ -42,7 +88,7 @@ const uploadImage = async (file: Express.Multer.File) => {
 export default {
   //   updateOrderStatus,
   //   getMyRestaurantOrders,
-  //   getMyRestaurant,
+    getMyRestaurant,
   createMyRestaurant,
-  //   updateMyRestaurant,
+    updateMyRestaurant,
 };
