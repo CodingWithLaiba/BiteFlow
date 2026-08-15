@@ -1,6 +1,5 @@
-// import { SearchState } from "@/pages/SearchPage";
-// import { Restaurant, RestaurantSearchResponse } from "@/types";
-
+import type { SearchState } from "@/pages/SearchPage";
+import type { RestaurantSearchResponse } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
