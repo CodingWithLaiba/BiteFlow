@@ -8,6 +8,7 @@ import { v2 as cloudinary } from "cloudinary";
 import myUserRoute from "./routes/myUserRoute";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
 import restaurantRoute from "./routes/RestaurentRoutes"
+import orderRoute from "./routes/OrderRoutes"
 // CHECK ENV VARIABLES
 
 console.log("Cloudinary config check:", {
@@ -49,6 +50,8 @@ app.use("/api/my/user", myUserRoute);
 app.use("/api/my/restaurant", MyRestaurantRoute);
 
 app.use("/api/restaurant",restaurantRoute)
+
+app.use("/api/order",orderRoute)
 // SERVER
 
 app.listen(7000, () => {
