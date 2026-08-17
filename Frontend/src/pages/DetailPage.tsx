@@ -10,6 +10,7 @@ import { useParams } from "react-router-dom";
 import OrderSummary from "@/components/OrderSummary";
 import CheckoutButton from "@/components/CheckoutButton";
 import type { UserFormData } from "@/forms/user-profile-form/UserProfileForm";
+import { useCreateCheckoutSession } from "@/api/OrderApi";
 
 export type CartItem = {
   _id: string;
@@ -21,6 +22,8 @@ export type CartItem = {
 export default function DetailPage() {
   const { restaurantId } = useParams();
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
+  const { createCheckoutSession, isPending: isCheckoutLoading } =
+    useCreateCheckoutSession();
 
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
@@ -68,7 +71,7 @@ export default function DetailPage() {
     });
   };
 
-  const onCheckout = async (userFormData: UserFormData)=> {
+  const onCheckout = async (userFormData: UserFormData) => {
     if (!restaurant) {
       return;
     }
@@ -92,8 +95,6 @@ export default function DetailPage() {
     const data = await createCheckoutSession(checkoutData);
     window.location.href = data.url;
   };
-
-  const isCheckoutLoading = false;
 
   if (isLoading || !restaurant) {
     return "Loading...";
