@@ -7,18 +7,18 @@ const STRIPE = new Stripe(process.env.STRIPE_API_KEY as string);
 const FRONTEND_URL = process.env.FRONTEND_URL as string;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-// const getMyOrders = async (req: Request, res: Response) => {
-//   try {
-//     const orders = await Order.find({ user: req.userId })
-//       .populate("restaurant")
-//       .populate("user");
+const getMyOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find({ user: req.userId })
+      .populate("restaurant")
+      .populate("user");
 
-//     res.json(orders);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "something went wrong" });
-//   }
-// };
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "something went wrong" });
+  }
+};
 
 type CheckoutSessionRequest = {
   cartItems: {
@@ -35,43 +35,42 @@ type CheckoutSessionRequest = {
   restaurantId: string;
 };
 
-// const stripeWebhookHandler = async (req: Request, res: Response) => {
-//   let event;
+const stripeWebhookHandler = async (req: Request, res: Response) => {
+  let event;
+  try {
+    const sig = req.headers["stripe-signature"];
+    event = STRIPE.webhooks.constructEvent(
+      req.body,
+      sig as string,
+      STRIPE_ENDPOINT_SECRET,
+    );
+  } catch (error: any) {
+    console.log(error);
+    return res.status(400).send(`Webhook error: ${error.message}`);
+  }
 
-//   try {
-//     const sig = req.headers["stripe-signature"];
-//     event = STRIPE.webhooks.constructEvent(
-//       req.body,
-//       sig as string,
-//       STRIPE_ENDPOINT_SECRET
-//     );
-//   } catch (error: any) {
-//     console.log(error);
-//     return res.status(400).send(`Webhook error: ${error.message}`);
-//   }
+  if (event.type === "checkout.session.completed") {
+    const order = await Order.findById(event.data.object.metadata?.orderId);
 
-//   if (event.type === "checkout.session.completed") {
-//     const order = await Order.findById(event.data.object.metadata?.orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
 
-//     if (!order) {
-//       return res.status(404).json({ message: "Order not found" });
-//     }
+    order.totalAmount = event.data.object.amount_total;
+    order.status = "paid";
 
-//     order.totalAmount = event.data.object.amount_total;
-//     order.status = "paid";
+    await order.save();
+  }
 
-//     await order.save();
-//   }
-
-//   res.status(200).send();
-// };
+  res.status(200).send();
+};
 
 const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const checkoutSessionRequest: CheckoutSessionRequest = req.body;
 
     const restaurant = await Restaurant.findById(
-      checkoutSessionRequest.restaurantId
+      checkoutSessionRequest.restaurantId,
     );
 
     if (!restaurant) {
@@ -89,14 +88,14 @@ const createCheckoutSession = async (req: Request, res: Response) => {
 
     const lineItems = createLineItems(
       checkoutSessionRequest,
-      restaurant.menuItems
+      restaurant.menuItems,
     );
 
     const session = await createSession(
       lineItems,
       newOrder._id.toString(),
       restaurant.deliveryPrice,
-      restaurant._id.toString()
+      restaurant._id.toString(),
     );
 
     if (!session.url) {
@@ -113,11 +112,11 @@ const createCheckoutSession = async (req: Request, res: Response) => {
 
 const createLineItems = (
   checkoutSessionRequest: CheckoutSessionRequest,
-  menuItems: MenuItemType[]
+  menuItems: MenuItemType[],
 ) => {
   const lineItems = checkoutSessionRequest.cartItems.map((cartItem) => {
     const menuItem = menuItems.find(
-      (item) => item._id.toString() === cartItem.menuItemId.toString()
+      (item) => item._id.toString() === cartItem.menuItemId.toString(),
     );
 
     if (!menuItem) {
@@ -145,7 +144,7 @@ const createSession = async (
   lineItems: Stripe.Checkout.SessionCreateParams.LineItem[],
   orderId: string,
   deliveryPrice: number,
-  restaurantId: string
+  restaurantId: string,
 ) => {
   const sessionData = await STRIPE.checkout.sessions.create({
     line_items: lineItems,
@@ -174,7 +173,7 @@ const createSession = async (
 };
 
 export default {
-//   getMyOrders,
+  getMyOrders,
   createCheckoutSession,
-//   stripeWebhookHandler,
+  stripeWebhookHandler,
 };
