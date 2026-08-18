@@ -7,16 +7,9 @@ import { v2 as cloudinary } from "cloudinary";
 
 import myUserRoute from "./routes/myUserRoute";
 import MyRestaurantRoute from "./routes/MyRestaurantRoute";
-import restaurantRoute from "./routes/RestaurentRoutes"
-import orderRoute from "./routes/OrderRoutes"
-// CHECK ENV VARIABLES
+import restaurantRoute from "./routes/RestaurentRoutes";
+import orderRoute from "./routes/OrderRoutes";
 
-console.log("Cloudinary config check:", {
-  cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-  apiKey: process.env.CLOUDINARY_API_KEY,
-  hasSecret: !!process.env.CLOUDINARY_API_SECRET,
-});
-console.log("secret length:", process.env.CLOUDINARY_API_SECRET?.length);
 // CLOUDINARY CONFIG
 
 cloudinary.config({
@@ -25,16 +18,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// MONGODB
+// MONGODB 
 
-mongoose
-  .connect(process.env.MONGOBD_CONNECTION as string)
-  .then(() => {
-    console.log("Connected to MongoDB!");
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-  });
+let isConnected = false;
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGOBD_CONNECTION as string);
+  isConnected = true;
+  console.log("Connected to MongoDB!");
+}
 
 // EXPRESS
 
@@ -46,17 +38,30 @@ app.use("/api/order/checkout/webhook", express.raw({ type: "*/*" }));
 
 app.use(express.json());
 
+//  DB is connected before any route handles a request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    res.status(500).json({ message: "Database connection failed" });
+  }
+});
+
 // ROUTES
 
 app.use("/api/my/user", myUserRoute);
-
 app.use("/api/my/restaurant", MyRestaurantRoute);
+app.use("/api/restaurant", restaurantRoute);
+app.use("/api/order", orderRoute);
 
-app.use("/api/restaurant",restaurantRoute)
+// SERVER 
 
-app.use("/api/order",orderRoute)
-// SERVER
+if (!process.env.VERCEL) {
+  app.listen(7000, () => {
+    console.log("server started on localhost:7000");
+  });
+}
 
-app.listen(7000, () => {
-  console.log("server started on localhost:7000");
-});
+export default app;
