@@ -1,4 +1,4 @@
-import type { CartItem } from "@/pa es/DetailPage";
+import type { CartItem } from "@/pages/DetailPage";
 import type { Restaurant } from "@/types";
 import { CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";

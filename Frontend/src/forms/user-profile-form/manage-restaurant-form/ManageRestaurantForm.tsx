@@ -1,6 +1,6 @@
 import { Form } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 import DetailsSection from "./DetailsSection";
 import { Separator } from "@/components/ui/separator";
@@ -56,12 +56,12 @@ type Props = {
 
 const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
   const form = useForm<RestaurantFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      cuisines: [],
-      menuItems: [{ name: "", price: 0 }],
-    },
-  });
+  resolver: zodResolver(formSchema) as Resolver<RestaurantFormData>,
+  defaultValues: {
+    cuisines: [],
+    menuItems: [{ name: "", price: 0 }],
+  },
+});
 
   useEffect(() => {
     if (!restaurant) {
@@ -70,7 +70,7 @@ const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
 
     // price lowest domination of 100 = 100pence == 1GBP
     const deliveryPriceFormatted = parseInt(
-      (restaurant.deliveryPrice / 100).toFixed(2)
+      (restaurant.deliveryPrice / 100).toFixed(2),
     );
 
     const menuItemsFormatted = restaurant.menuItems.map((item) => ({
@@ -133,7 +133,7 @@ const ManageRestaurantForm = ({ onSave, isLoading, restaurant }: Props) => {
         <MenuSection />
         <Separator />
         <ImageSection />
-        {isLoading ? <LoadingButton /> : <Button type="submit">Submit</Button>} 
+        {isLoading ? <LoadingButton /> : <Button type="submit">Submit</Button>}
       </form>
     </Form>
   );
